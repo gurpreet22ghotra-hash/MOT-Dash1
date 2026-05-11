@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Speedy Dash">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Speedy Dash">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="description" content="Service Department Performance Dashboard">
+<link id="pwa-manifest" rel="manifest">
+<link id="apple-touch-icon" rel="apple-touch-icon">
+<title>Speedy Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c0f;
+  --surface: #111318;
+  --surface2: #181c23;
+  --border: #1e2430;
+  --accent: #00e5b0;
+  --accent2: #ff6b35;
+  --accent3: #4fc3f7;
+  --warn: #ffd54f;
+  --danger: #ef5350;
+  --text: #e8edf5;
+  --muted: #5a6478;
+  --label: #8a94a8;
+  --glow: 0 0 20px rgba(0,229,176,0.15);
+  --nav-h: 68px;
+  --header-h: 60px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ── APP SHELL ───────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── TOP HEADER BAR ──────────────────────────────────────────── */
+.app-header {
+  flex-shrink: 0;
+  height: calc(var(--header-h) + var(--safe-top));
+  padding-top: var(--safe-top);
+  background: rgba(10,12,15,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 20px;
+  padding-right: 20px;
+  z-index: 100;
+}
+.app-header-left { display: flex; flex-direction: column; gap: 1px; }
+.brand-lockup { display:flex; align-items:center; gap:10px; }
+.speedy-logo {
+  font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px;
+  color:#fff; background:linear-gradient(135deg,#003da6,#005bea 65%,#e31b23 65%);
+  border:2px solid #fff; border-radius:8px; padding:5px 10px; line-height:1;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.25);
+}
+.app-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 3px;
+  line-height: 1;
+  color: var(--text);
+}
+.app-title span { color: var(--accent); }
+.app-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.app-header-right { display: flex; align-items: center; gap: 10px; }
+.month-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 12px;
+}
+.month-pill-btn {
+  width: 22px; height: 22px;
+  background: none; border: none;
+  color: var(--muted); font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+.month-pill-btn:active { color: var(--accent); background: rgba(0,229,176,0.1); }
+.month-pill-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  min-width: 100px;
+  text-align: center;
+}
+#overallBadge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 99px;
+  font-size: 9px; font-family: 'JetBrains Mono', monospace;
+  font-weight: 700; letter-spacing: 0.5px; white-space: nowrap;
+}
+
+/* ── SCROLLABLE CONTENT AREA ─────────────────────────────────── */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── SCREENS ─────────────────────────────────────────────────── */
+.screen { display: none; padding: 16px 16px calc(var(--nav-h) + var(--safe-bottom) + 16px); }
+.screen.active { display: block; }
+
+/* ── BOTTOM NAV ──────────────────────────────────────────────── */
+.bottom-nav {
+  flex-shrink: 0;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(var(--nav-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(13,15,20,0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: stretch;
+  z-index: 200;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  padding: 8px 4px;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-item.active { color: var(--accent); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 4px 4px;
+}
+.nav-icon {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.2s;
+}
+.nav-item.active .nav-icon { transform: scale(1.1); }
+.nav-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── SECTION TITLE ───────────────────────────────────────────── */
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  margin-top: 24px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-title:first-child { margin-top: 0; }
+.section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ── PROGRESS STRIP ──────────────────────────────────────────── */
+.days-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; flex-wrap: wrap;
+}
+.days-label { font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--muted); font-family:'JetBrains Mono',monospace; white-space:nowrap; }
+.days-bar-wrap { flex:1; min-width:120px; }
+.days-bar-track { background:var(--border); height:6px; border-radius:99px; overflow:hidden; }
+.days-bar-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent3)); border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+.days-stat { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--accent); white-space:nowrap; }
+.days-hint { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+
+/* ── CARDS ───────────────────────────────────────────────────── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.grid-4 { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  animation: fadeUp 0.35s ease both;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: var(--card-accent, var(--accent)); opacity:0.7;
+}
+.card-hero {
+  background: linear-gradient(135deg,#0f1f18 0%,#111318 100%);
+  border-color: rgba(0,229,176,0.25);
+  box-shadow: var(--glow);
+}
+.card-hero::before { opacity:1; height:3px; }
+.card-hero .card-value { color: var(--accent); }
+.card-label { font-size:9px; text-transform:uppercase; letter-spacing:1.5px; color:var(--label); margin-bottom:6px; font-family:'JetBrains Mono',monospace; }
+.card-value { font-family:'Bebas Neue',sans-serif; font-size:clamp(18px,4vw,28px); letter-spacing:1px; color:var(--text); line-height:1; }
+.card-sub { margin-top:6px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px; }
+.card-pct { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; }
+.pct-green { color:var(--accent); }
+.pct-orange { color:var(--accent2); }
+.pct-red { color:var(--danger); }
+.pct-blue { color:var(--accent3); }
+.mini-bar { width:100%; height:3px; background:var(--border); border-radius:99px; margin-top:8px; overflow:hidden; }
+.mini-bar-fill { height:100%; border-radius:99px; transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+.forecast-pill {
+  font-size:9px; color:var(--accent3);
+  background:rgba(79,195,247,0.08); border:1px solid rgba(79,195,247,0.15);
+  border-radius:99px; padding:2px 6px;
+  font-family:'JetBrains Mono',monospace; white-space:nowrap;
+}
+
+/* Equal-height revenue columns */
+#revenueGrid { align-items:stretch; }
+#revenueGrid > div { display:flex; flex-direction:column; gap:12px; }
+#revenueGrid > div > .card { flex:1; display:flex; flex-direction:column; justify-content:space-between; }
+
+/* ── STATUS BADGES ───────────────────────────────────────────── */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:99px; font-size:9px; font-family:'JetBrains Mono',monospace; font-weight:700; letter-spacing:0.5px; }
+.badge-on-track  { background:rgba(0,229,176,0.1); color:var(--accent); border:1px solid rgba(0,229,176,0.2); }
+.badge-behind    { background:rgba(255,107,53,0.1); color:var(--accent2); border:1px solid rgba(255,107,53,0.2); }
+.badge-at-risk   { background:rgba(255,213,79,0.1); color:var(--warn); border:1px solid rgba(255,213,79,0.2); }
+.badge-exceeded  { background:rgba(79,195,247,0.1); color:var(--accent3); border:1px solid rgba(79,195,247,0.2); }
+.dot { width:5px; height:5px; border-radius:50%; background:currentColor; display:inline-block; }
+
+/* ── SUMMARY TABLE ───────────────────────────────────────────── */
+.summary-table { width:100%; border-collapse:collapse; font-size:11px; }
+.summary-table th { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); }
+.summary-table td { padding:10px 10px; border-bottom:1px solid rgba(30,36,48,0.5); vertical-align:middle; }
+.summary-table tr:last-child td { border-bottom:none; }
+.summary-table tr:hover td { background:var(--surface2); }
+.td-label { color:var(--label); font-size:11px; }
+.td-val { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:11px; }
+.td-pct { font-family:'JetBrains Mono',monospace; font-size:10px; }
+
+/* ── INPUT SCREEN ────────────────────────────────────────────── */
+.input-section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px; letter-spacing: 3px; color: var(--muted);
+  margin-bottom: 10px; margin-top: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.input-section-label:first-child { margin-top: 0; }
+.input-section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.input-group { display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+.input-group label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.input-group input {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; padding:12px 14px; color:var(--text);
+  font-family:'JetBrains Mono',monospace; font-size:16px;
+  outline:none; width:100%; transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.input-group input:focus { border-color:var(--accent); }
+.input-group input::placeholder { color:var(--muted); }
+.input-2col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.action-row { display:flex; gap:10px; margin-top:20px; }
+.btn-calc {
+  flex:2; background:linear-gradient(135deg,var(--accent),#00c49a);
+  border:none; border-radius:12px; color:#0a0c0f;
+  font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+  padding:14px; cursor:pointer; transition:opacity 0.2s, transform 0.1s;
+}
+.btn-calc:active { transform:scale(0.97); opacity:0.9; }
+.btn-save {
+  flex:1; background:var(--surface2); border:1px solid var(--accent);
+  border-radius:12px; color:var(--accent);
+  font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px;
+  padding:14px 10px; cursor:pointer; transition:background 0.2s, transform 0.1s;
+}
+.btn-save:active { transform:scale(0.97); background:rgba(0,229,176,0.1); }
+.btn-clear {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; color:var(--muted);
+  font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:1px;
+  padding:14px 10px; cursor:pointer; transition:border-color 0.2s, color 0.2s;
+}
+.btn-clear:active { border-color:var(--danger); color:var(--danger); }
+#saveStatus {
+  text-align:center; margin-top:10px; font-size:10px;
+  font-family:'JetBrains Mono',monospace; color:var(--muted); min-height:14px;
+}
+
+/* ── DAILY TAB ───────────────────────────────────────────────── */
+.daily-hero { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.daily-big-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:14px; position:relative; overflow:hidden; text-align:center;
+}
+.daily-big-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-top,var(--accent)); }
+.daily-big-card.highlight { background:linear-gradient(135deg,#0f1f18,#111318); border-color:rgba(0,229,176,0.3); box-shadow:var(--glow); }
+.dbc-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-bottom:6px; }
+.dbc-value { font-family:'Bebas Neue',sans-serif; font-size:clamp(20px,5vw,30px); letter-spacing:1px; color:var(--text); line-height:1; }
+.dbc-sub { margin-top:6px; font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--label); }
+.chart-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px; }
+.chart-title { font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:3px; color:var(--muted); margin-bottom:14px; }
+.bar-chart-container { overflow-x:auto; padding-bottom:24px; }
+.bar-chart { display:flex; align-items:flex-end; gap:3px; height:110px; min-width:500px; }
+.bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+.bar-budget { width:100%; background:rgba(79,195,247,0.15); border-radius:3px 3px 0 0; position:absolute; bottom:0; border:1px solid rgba(79,195,247,0.25); }
+.bar-actual { width:60%; border-radius:3px 3px 0 0; position:absolute; bottom:0; left:20%; transition:height 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+.bar-day-label { position:absolute; bottom:-18px; font-size:8px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.chart-legend { display:flex; gap:14px; margin-top:4px; flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:9px; font-family:'JetBrains Mono',monospace; color:var(--label); }
+.legend-dot { width:8px; height:8px; border-radius:2px; }
+.daily-table { width:100%; border-collapse:collapse; font-size:11px; }
+.daily-table th { font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:8px 8px; text-align:left; border-bottom:1px solid var(--border); }
+.daily-table td { padding:9px 8px; border-bottom:1px solid rgba(30,36,48,0.5); font-family:'JetBrains Mono',monospace; font-size:10px; vertical-align:middle; }
+.daily-table tr:last-child td { border-bottom:none; }
+.daily-table tr:hover td { background:var(--surface2); }
+.daily-table .today-row td { background:rgba(0,229,176,0.04); }
+.pace-bar-wrap { width:50px; }
+.pace-bar-track { height:3px; background:var(--border); border-radius:99px; overflow:hidden; }
+.pace-bar-fill { height:100%; border-radius:99px; }
+
+/* ── SETTINGS SCREEN ─────────────────────────────────────────── */
+.settings-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:16px; margin-bottom:12px;
+}
+.settings-card-title { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; color:var(--label); margin-bottom:12px; }
+.settings-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid rgba(30,36,48,0.5);
+}
+.settings-row:last-child { border-bottom:none; }
+.settings-row-label { font-size:13px; color:var(--text); }
+.settings-row-val { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); }
+.saved-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,229,176,0.08); border:1px solid rgba(0,229,176,0.2);
+  border-radius:99px; padding:4px 12px;
+  font-size:10px; font-family:'JetBrains Mono',monospace; color:var(--accent);
+  margin-top:12px;
+}
+
+
+/* ── BONUS / ALERTS / PRINT REPORT ───────────────────────────── */
+.alert-stack { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.alert-box { border-radius:14px; padding:13px 14px; border:1px solid var(--border); background:var(--surface); font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.45; }
+.alert-good { border-color:rgba(0,229,176,.28); background:rgba(0,229,176,.06); color:var(--accent); }
+.alert-warn { border-color:rgba(255,213,79,.28); background:rgba(255,213,79,.06); color:var(--warn); }
+.alert-danger { border-color:rgba(239,83,80,.28); background:rgba(239,83,80,.06); color:var(--danger); }
+.print-report { display:none; }
+.print-btn { width:100%; background:linear-gradient(135deg,#0047ba,#e31b23); border:none; color:#fff; border-radius:12px; padding:13px; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:2px; cursor:pointer; }
+@media print {
+  body { background:#fff !important; color:#111 !important; overflow:visible !important; }
+  .app-shell, .bottom-nav, .install-banner, .ios-sheet { display:none !important; }
+  .print-report { display:block !important; padding:28px; font-family:Arial,sans-serif; color:#111; }
+  .pr-header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:4px solid #e31b23; padding-bottom:14px; margin-bottom:18px; }
+  .pr-logo { font-family:Impact,'Arial Black',sans-serif; font-size:34px; color:#0047ba; letter-spacing:1px; }
+  .pr-logo span { color:#e31b23; }
+  .pr-sub { font-size:12px; color:#555; margin-top:3px; }
+  .pr-title { text-align:right; font-size:22px; font-weight:800; }
+  .pr-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0; }
+  .pr-card { border:1px solid #ccc; border-radius:8px; padding:10px; }
+  .pr-label { font-size:10px; text-transform:uppercase; color:#555; font-weight:700; }
+  .pr-value { font-size:20px; font-weight:800; margin-top:4px; }
+  .pr-section { margin-top:18px; font-size:14px; font-weight:800; border-bottom:1px solid #ccc; padding-bottom:5px; }
+  .pr-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:11px; }
+  .pr-table th { background:#f1f3f6; text-align:left; padding:8px; border:1px solid #ccc; }
+  .pr-table td { padding:8px; border:1px solid #ddd; }
+  .pr-note { margin-top:18px; font-size:10px; color:#555; line-height:1.5; }
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.screen.active .card,
+.screen.active .days-strip,
+.screen.active .settings-card,
+.screen.active .chart-wrap,
+.screen.active .daily-big-card {
+  animation: fadeUp 0.3s ease both;
+}
+
+/* ── HISTORY SCREEN ──────────────────────────────────────────── */
+.history-header { margin-bottom: 16px; }
+.history-headline { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:3px; color:var(--text); }
+.history-sub { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); margin-top:2px; }
+
+.month-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  animation: fadeUp 0.3s ease both;
+}
+.month-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background: var(--mc-color, var(--accent));
+}
+.month-card:active { transform:scale(0.99); border-color:var(--accent); }
+.month-card.current-month { border-color: rgba(0,229,176,0.3); background: linear-gradient(135deg,#0f1f18,#111318); }
+.mc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.mc-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:var(--text); }
+.mc-badge-row { display:flex; gap:6px; align-items:center; }
+.mc-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.mc-metric { text-align:center; }
+.mc-metric-val { font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--text); line-height:1; }
+.mc-metric-label { font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+.mc-metric-pct { font-family:'JetBrains Mono',monospace; font-size:9px; margin-top:1px; }
+.mc-bar { height:3px; background:var(--border); border-radius:99px; margin-top:10px; overflow:hidden; }
+.mc-bar-fill { height:100%; border-radius:99px; }
+.mc-actions { display:flex; gap:8px; margin-top:12px; }
+.mc-load-btn {
+  flex:1; background:rgba(0,229,176,0.08); border:1px solid rgba(0,229,176,0.2);
+  border-radius:8px; color:var(--accent);
+  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px;
+  padding:8px; cursor:pointer;
+}
+.mc-del-btn {
+  background:rgba(239,83,80,0.06); border:1px solid rgba(239,83,80,0.15);
+  border-radius:8px; color:var(--danger);
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  padding:8px 12px; cursor:pointer;
+}
+.history-empty-box {
+  text-align:center; padding:48px 24px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; margin-top:8px;
+}
+
+/* ── INSTALL BANNER ──────────────────────────────────────────── */
+.install-banner {
+  position: fixed;
+  bottom: calc(var(--nav-h) + var(--safe-bottom) + 12px);
+  left: 12px; right: 12px;
+  background: linear-gradient(135deg, #0f1f18, #111c18);
+  border: 1px solid rgba(0,229,176,0.35);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  z-index: 999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,229,176,0.1);
+  animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.install-banner.hiding {
+  animation: slideDown 0.3s ease forwards;
+}
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity:1; transform:translateY(0); }
+  to   { opacity:0; transform:translateY(20px); }
+}
+.install-icon {
+  width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+}
+.install-text { flex: 1; }
+.install-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px; letter-spacing: 2px; color: var(--text);
+}
+.install-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--muted); margin-top: 2px;
+}
+.install-btn {
+  background: var(--accent);
+  border: none; border-radius: 10px;
+  color: #0a0c0f;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px; letter-spacing: 1.5px;
+  padding: 9px 16px; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.install-btn:active { opacity:0.85; transform:scale(0.97); }
+.install-dismiss {
+  background: none; border: none; color: var(--muted);
+  font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
+  line-height: 1;
+}
+
+/* iOS instructions sheet */
+.ios-sheet {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex; align-items: flex-end;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.ios-sheet-inner {
+  width: 100%;
+  background: #16191f;
+  border: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px calc(var(--safe-bottom) + 20px);
+}
+.ios-sheet-handle {
+  width: 36px; height: 4px; background: var(--border);
+  border-radius: 99px; margin: 0 auto 16px;
+}
+.ios-sheet-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: 3px; color: var(--text);
+  margin-bottom: 4px;
+}
+.ios-sheet-sub {
+  font-size: 12px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; margin-bottom: 20px;
+}
+.ios-step {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 0; border-bottom: 1px solid rgba(30,36,48,0.6);
+}
+.ios-step:last-of-type { border-bottom: none; }
+.ios-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(0,229,176,0.12); border: 1px solid rgba(0,229,176,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--accent);
+  flex-shrink: 0;
+}
+.ios-step-text { font-size: 14px; color: var(--text); line-height: 1.4; }
+.ios-step-text span { color: var(--accent); font-weight: 600; }
+.ios-close-btn {
+  width: 100%; margin-top: 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--label);
+  font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: 2px;
+  padding: 13px; cursor: pointer;
+}
+
+.app-content::-webkit-scrollbar { display:none; }
+.app-content { scrollbar-width:none; }
+.bar-chart-container::-webkit-scrollbar { height:3px; }
+.bar-chart-container::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+
+<style id="homeAppStyles">
+.install-home-banner {
+  position: fixed;
+  left: 14px;
+  right: 14px;
+  bottom: 82px;
+  z-index: 9999;
+  background: linear-gradient(135deg, rgba(17,19,24,.98), rgba(10,12,15,.98));
+  border: 1px solid rgba(0,229,176,.35);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 18px 45px rgba(0,0,0,.45);
+  display: none;
+  gap: 12px;
+  align-items: center;
+  color: #e8edf5;
+  font-family: 'DM Sans', Arial, sans-serif;
+}
+.install-home-banner.show { display: flex; }
+.install-home-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(135deg,#0066ff,#ef233c);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  color:white;
+}
+.install-home-text { flex: 1; }
+.install-home-title { font-weight: 800; font-size: 14px; letter-spacing: .5px; }
+.install-home-sub { font-size: 11px; opacity: .75; margin-top: 2px; line-height: 1.35; }
+.install-home-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: #00e5b0;
+  color: #07100d;
+  font-weight: 800;
+  cursor: pointer;
+}
+.install-home-close {
+  background: transparent;
+  border: 0;
+  color: #8a94a8;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+@media print {
+  .install-home-banner { display:none !important; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ── TOP HEADER ──────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="app-header-left">
+      <div class="app-title">SERVICE <span>DASH</span></div>
+      <div class="app-subtitle">St. Catharines · Performance</div>
+    </div>
+    <div class="app-header-right">
+      <div class="month-pill">
+        <button class="month-pill-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-pill-label" id="monthDisplay">MAY 2026</div>
+        <button class="month-pill-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div id="overallBadge" class="badge badge-on-track"><span class="dot"></span> ON TRACK</div>
+    </div>
+  </header>
+
+  <!-- ── SCROLLABLE BODY ─────────────────────────────────────── -->
+  <div class="app-content">
+
+    <!-- ══ SCREEN: OVERVIEW ══════════════════════════════════════ -->
+    <div class="screen active" id="screen-overview">
+
+      <!-- Month progress strip -->
+      <div class="days-strip" style="margin-top:4px;">
+        <span class="days-label">Progress</span>
+        <div class="days-bar-wrap">
+          <div class="days-bar-track"><div class="days-bar-fill" id="daysBarFill" style="width:0%"></div></div>
+        </div>
+        <span class="days-stat" id="daysStatText">0 / 0 days</span>
+        <span class="days-hint" id="daysHint"></span>
+      </div>
+
+      <div class="section-title">Revenue Performance</div>
+      <div class="grid-2" id="revenueGrid"></div>
+
+      <div class="section-title">Car Count</div>
+      <div class="grid-3" id="carCountGrid"></div>
+
+      <div class="section-title">Avg Repair Order</div>
+      <div class="grid-2" id="aroGrid"></div>
+
+      <div class="section-title">Labour &amp; Hours</div>
+      <div class="grid-4" id="hoursGrid"></div>
+
+      <div class="section-title">Manager Bonus Tracker</div>
+      <div class="grid-3" id="bonusGrid"></div>
+
+
+      
+
+
+<div class="section-title">Full Summary</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="summary-table" id="summaryTable">
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Budget</th>
+              <th>Actual</th>
+              <th>Forecast</th>
+              <th>vs Bud%</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Revenue Target Alerts</div>
+      <div class="alert-stack" id="revenueAlerts"></div>
+    </div><!-- /overview -->
+
+    <!-- ══ SCREEN: DAILY REVENUE ══════════════════════════════════ -->
+    <div class="screen" id="screen-daily">
+      <div class="daily-hero" id="dailyHero" style="margin-top:4px;"></div>
+      <div class="chart-wrap">
+        <div class="chart-title">Daily Revenue · Actual vs Budget</div>
+        <div class="bar-chart-container">
+          <div class="bar-chart" id="dailyBarChart"></div>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(79,195,247,0.4)"></div> Budget/day</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Actual avg</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,176,0.15);border:1px dashed var(--accent)"></div> Required</div>
+        </div>
+      </div>
+      <div class="section-title">Day-by-Day</div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="daily-table">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th>Cum. Budget</th>
+              <th>Cum. Actual</th>
+              <th>Avg/Day</th>
+              <th>vs Budget</th>
+              <th>Pace</th>
+            </tr>
+          </thead>
+          <tbody id="dailyTableBody"></tbody>
+        </table>
+      </div>
+    </div><!-- /daily -->
+
+    <!-- ══ SCREEN: INPUTS ═════════════════════════════════════════ -->
+    <div class="screen" id="screen-inputs">
+      <div style="margin-top:4px;">
+
+        <div class="input-section-label">Revenue</div>
+        <div class="input-2col">
+          <div class="input-group">
+            <label>Revenue Budget ($)</label>
+            <input id="revBudget" type="number" min="0" placeholder="91602" oninput="updateDaysBar()">
+          </div>
+          <div class="input-group">
+            <label>Revenue Generated ($)</label>
+            <input id="revActual" type="number" min="0" placeholder="0" oninput="updateDaysBar()">
+          </div>
+        </div>
+
+        <div class="input-section-label">Working Days</div>
+        <div class="input-2col">
+          <div class="input-group">
+            <label>Days in Month</label>
+            <input id="workDays" type="number" min="0" placeholder="25" oninput="updateDaysBar()">
+          </div>
+          <div class="input-group">
+            <label>Days Elapsed</label>
+            <input id="daysElapsed" type="number" min="0" placeholder="4" oninput="updateDaysBar()">
+          </div>
+        </div>
+
+        <div class="input-section-label">Car Count</div>
+        <div class="input-2col">
+          <div class="input-group">
+            <label>Car Count Budget</label>
+            <input id="carBudget" type="number" min="0" placeholder="225">
+          </div>
+          <div class="input-group">
+            <label>Actual Car Count</label>
+            <input id="carActual" type="number" min="0" placeholder="0">
+          </div>
+        </div>
+
+        <div class="input-section-label">Avg Repair Order</div>
+        <div class="input-2col">
+          <div class="input-group">
+            <label>ARO Budget ($)</label>
+            <input id="aroBudget" type="number" min="0" placeholder="493">
+          </div>
+          <div class="input-group">
+            <label>Actual ARO ($)</label>
+            <input id="aroActual" type="number" min="0" placeholder="0">
+          </div>
+        </div>
+
+        <div class="input-section-label">Labour &amp; Hours</div>
+        <div class="input-2col">
+          <div class="input-group">
+            <label>Budgeted Hours</label>
+            <input id="budgetHours" type="number" min="0" placeholder="0">
+          </div>
+          <div class="input-group">
+            <label>Hours Worked</label>
+            <input id="actualHours" type="number" min="0" placeholder="0">
+          </div>
+          <div class="input-group">
+            <label>Hours Invoiced</label>
+            <input id="invoicedHours" type="number" min="0" placeholder="0">
+          </div>
+          <div class="input-group">
+            <label>Total Labour Cost ($)</label>
+            <input id="labourCost" type="number" min="0" placeholder="0">
+          </div>
+        </div>
+
+        <div class="input-section-label">Product Cost + Bonus</div>
+        <div class="input-2col">
+          <div class="input-group"><label>Product Cost ($)</label><input id="productCost" type="number" min="0" placeholder="0"></div>
+          <div class="input-group"><label>Minimum Review Rating</label><input id="reviewMinRating" type="number" min="0" max="5" step="0.1" placeholder="4.5"></div>
+          <div class="input-group"><label>Google Reviews Start</label><input id="googleReviewsStart" type="number" min="0" placeholder="0"></div>
+          <div class="input-group"><label>Google Reviews Current</label><input id="googleReviewsEnd" type="number" min="0" placeholder="0"></div>
+          <div class="input-group"><label>Monthly Review Target</label><input id="googleReviewTarget" type="number" min="0" placeholder="50"></div>
+          <div class="input-group"><label>Review Target Bonus ($)</label><input id="googleReviewBonus" type="number" min="0" placeholder="50"></div>
+        </div>
+
+        <div class="action-row">
+          <button class="btn-calc" onclick="calculate(); navTo('overview')">▶ CALCULATE</button>
+          <button class="btn-save" id="saveBtn" onclick="saveData()">💾 SAVE</button>
+          <button class="btn-clear" onclick="clearSaved()">✕</button>
+        </div>
+        <div id="saveStatus"></div>
+
+      </div>
+    </div><!-- /inputs -->
+
+    <!-- ══ SCREEN: SETTINGS ═══════════════════════════════════════ -->
+    <div class="screen" id="screen-settings">
+      <div style="margin-top:4px;">
+
+        <div class="settings-card">
+          <div class="settings-card-title">Current Month</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Period</span>
+            <span class="settings-row-val" id="settingsMonth">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Working Days</span>
+            <span class="settings-row-val" id="settingsWorkDays">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Days Elapsed</span>
+            <span class="settings-row-val" id="settingsElapsed">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Days Remaining</span>
+            <span class="settings-row-val" id="settingsRemaining">—</span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Presets (May 2026)</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Revenue Budget</span>
+            <span class="settings-row-val">$91,602</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Car Count Budget</span>
+            <span class="settings-row-val">225</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">ARO Budget</span>
+            <span class="settings-row-val">$493</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Working Days</span>
+            <span class="settings-row-val">25</span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">Data &amp; Storage</div>
+          <div class="settings-row">
+            <span class="settings-row-label">Months Tracked</span>
+            <span class="settings-row-val" id="settingsTotalMonths">—</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Last Saved</span>
+            <span class="settings-row-val" id="settingsLastSaved">—</span>
+          </div>
+          <div class="settings-row" style="margin-top:8px;">
+            <button class="print-btn" onclick="printMonthlyReport()">🖨 PRINT MONTHLY REPORT</button>
+          </div>
+          <div class="settings-row" style="margin-top:8px;">
+            <button onclick="saveData()" style="flex:1;background:rgba(0,229,176,0.1);border:1px solid rgba(0,229,176,0.3);color:var(--accent);border-radius:10px;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;width:100%;">💾 SAVE CURRENT MONTH</button>
+          </div>
+          <div class="settings-row" style="border-bottom:none;">
+            <button onclick="clearSaved()" style="flex:1;background:rgba(239,83,80,0.07);border:1px solid rgba(239,83,80,0.2);color:var(--danger);border-radius:10px;padding:10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;width:100%;">✕ CLEAR THIS MONTH</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div class="settings-card-title">About</div>
+          <div class="settings-row">
+            <span class="settings-row-label">App</span>
+            <span class="settings-row-val">Service Dashboard v3</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-row-label">Last Calculated</span>
+            <span class="settings-row-val" id="lastCalc">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /settings -->
+
+    <!-- ══ SCREEN: MONTHLY PERFORMANCE ══════════════════════════ -->
+    <div class="screen" id="screen-performance">
+      <div style="margin-top:4px;">
+        <div class="history-header">
+          <div class="history-headline">Monthly Performance</div>
+          <div class="history-sub">All metrics across every saved month</div>
+        </div>
+
+        <!-- KPI Summary Cards row -->
+        <div id="perfKpiRow" class="grid-3" style="margin-bottom:16px;"></div>
+
+        <!-- Revenue Chart -->
+        <div class="section-title">Revenue — Budget vs Actual</div>
+        <div class="chart-wrap">
+          <div class="bar-chart-container">
+            <div class="bar-chart" id="perfRevChart" style="height:130px;"></div>
+          </div>
+          <div class="chart-legend" style="margin-top:20px;">
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(79,195,247,0.4)"></div> Budget</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Actual</div>
+          </div>
+        </div>
+
+        <!-- Car Count Chart -->
+        <div class="section-title">Car Count — Budget vs Actual</div>
+        <div class="chart-wrap">
+          <div class="bar-chart-container">
+            <div class="bar-chart" id="perfCarChart" style="height:100px;"></div>
+          </div>
+        </div>
+
+        <!-- ARO Chart -->
+        <div class="section-title">Avg Repair Order — Budget vs Actual</div>
+        <div class="chart-wrap">
+          <div class="bar-chart-container">
+            <div class="bar-chart" id="perfAroChart" style="height:100px;"></div>
+          </div>
+        </div>
+
+        <!-- Full comparison table -->
+        <div class="section-title">Full Month Comparison</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="daily-table" id="perfTable">
+            <thead>
+              <tr>
+                <th>Month</th>
+                <th>Revenue</th>
+                <th>vs Bud</th>
+                <th>Cars</th>
+                <th>ARO</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="perfTableBody"></tbody>
+          </table>
+        </div>
+
+        <div id="perfEmpty" style="display:none;">
+          <div class="history-empty-box">
+            <div style="font-size:36px;margin-bottom:12px;">📊</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--label);">NO DATA YET</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">Save at least one month of data<br>to see performance here.</div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /performance -->
+
+    <!-- ══ SCREEN: HISTORY ═══════════════════════════════════════ -->
+    <div class="screen" id="screen-history">
+      <div style="margin-top:4px;">
+        <div class="history-header">
+          <div class="history-headline">Monthly Tracker</div>
+          <div class="history-sub">All saved months — tap to load</div>
+        </div>
+        <div id="historyList"></div>
+        <div id="historyEmpty" style="display:none;">
+          <div class="history-empty-box">
+            <div style="font-size:36px;margin-bottom:12px;">📅</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--label);">NO MONTHS SAVED YET</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6;">Go to Inputs, enter your numbers,<br>then tap Save to track this month.</div>
+          </div>
+        </div>
+        <!-- Year-over-year chart -->
+        <div id="historyChart" style="display:none;">
+          <div class="section-title" style="margin-top:24px;">Revenue by Month</div>
+          <div class="chart-wrap" style="padding:16px;">
+            <div class="bar-chart-container">
+              <div class="bar-chart" id="historyBarChart" style="height:120px;min-width:auto;"></div>
+            </div>
+            <div class="chart-legend" style="margin-top:20px;">
+              <div class="legend-item"><div class="legend-dot" style="background:rgba(79,195,247,0.4)"></div> Budget</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Actual</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /history -->
+
+  </div><!-- /app-content -->
+
+  <!-- ── BOTTOM NAV ──────────────────────────────────────────── -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-overview" onclick="navTo('overview')">
+      <span class="nav-icon">◈</span>
+      <span class="nav-label">Overview</span>
+    </button>
+    <button class="nav-item" id="nav-daily" onclick="navTo('daily')">
+      <span class="nav-icon">▲</span>
+      <span class="nav-label">Daily</span>
+    </button>
+    <button class="nav-item" id="nav-inputs" onclick="navTo('inputs')">
+      <span class="nav-icon">⊞</span>
+      <span class="nav-label">Inputs</span>
+    </button>
+    <button class="nav-item" id="nav-performance" onclick="navTo('performance')">
+      <span class="nav-icon">◉</span>
+      <span class="nav-label">Monthly</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="navTo('history')">
+      <span class="nav-icon">◷</span>
+      <span class="nav-label">History</span>
+    </button>
+    <button class="nav-item" id="nav-settings" onclick="navTo('settings')">
+      <span class="nav-icon">◎</span>
+      <span class="nav-label">Settings</span>
+    </button>
+  </nav>
+
+</div><!-- /app-shell -->
+
+<div class="print-report" id="printReport"></div>
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────
+let currentDate  = new Date();
+let currentYear  = currentDate.getFullYear();
+let currentMonth = currentDate.getMonth();
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DB_KEY  = 'motDash_months'; // stores all monthly data as { "2026-04": {...}, "2026-05": {...} }
+const MONTH_TARGETS_2026 = {
+  '2026-02': { revBudget:83790, carBudget:225, aroBudget:476 },
+  '2026-03': { revBudget:87700, carBudget:225, aroBudget:422 },
+  '2026-04': { revBudget:109512, carBudget:234, aroBudget:468 },
+  '2026-05': { revBudget:91602, carBudget:225, aroBudget:493 },
+  '2026-06': { revBudget:94500, carBudget:225, aroBudget:463 },
+  '2026-07': { revBudget:109620, carBudget:225, aroBudget:583 },
+  '2026-08': { revBudget:86940, carBudget:225, aroBudget:451 },
+  '2026-09': { revBudget:97020, carBudget:225, aroBudget:435 },
+  '2026-10': { revBudget:96012, carBudget:225, aroBudget:500 },
+  '2026-11': { revBudget:113652, carBudget:319, aroBudget:357 },
+  '2026-12': { revBudget:97902, carBudget:225, aroBudget:508 }
+};
+function monthlyPresetDefaults(key) {
+  const target = MONTH_TARGETS_2026[key];
+  if (!target) return null;
+  return { ...target, revActual:0, workDays:25, daysElapsed:0, carActual:0, aroActual:0, budgetHours:640, actualHours:0, invoicedHours:0, labourCost:0, productCost:0, reviewMinRating:4.5, googleReviewsStart:0, googleReviewsEnd:0, googleReviewTarget:50, googleReviewBonus:50 };
+}
+
+// ─── MONTH KEY ──────────────────────────────────────────────────────────
+function monthKey(y, m) { return `${y}-${String(m+1).padStart(2,'0')}`; }
+function currentKey()   { return monthKey(currentYear, currentMonth); }
+
+// ─── DATABASE ───────────────────────────────────────────────────────────
+function dbLoad() {
+  try { return JSON.parse(localStorage.getItem(DB_KEY) || '{}'); } catch(e) { return {}; }
+}
+function dbSave(db) {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); return true; } catch(e) { return false; }
+}
+function dbGetMonth(key) { return dbLoad()[key] || null; }
+function dbSaveMonth(key, data) {
+  const db = dbLoad();
+  db[key] = { ...data, _savedAt: new Date().toISOString(), _key: key };
+  return dbSave(db);
+}
+function dbDeleteMonth(key) {
+  const db = dbLoad();
+  delete db[key];
+  return dbSave(db);
+}
+function dbAllMonths() {
+  const db = dbLoad();
+  return Object.values(db).sort((a,b) => b._key.localeCompare(a._key));
+}
+
+// ─── NAV ────────────────────────────────────────────────────────────────
+function navTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  document.querySelector('.app-content').scrollTop = 0;
+  if (id === 'settings')    updateSettingsScreen();
+  if (id === 'history')     renderHistory();
+  if (id === 'performance') renderPerformance();
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────────
+const fmt$ = v => {
+  if (isNaN(v) || !isFinite(v)) return '$0.00';
+  return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+};
+const fmtN = (v, dec=0) => {
+  if (isNaN(v) || !isFinite(v)) return '0';
+  return new Intl.NumberFormat('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v);
+};
+const fmtPct = v => {
+  if (isNaN(v) || !isFinite(v)) return '0.0%';
+  return (v>=0?'+':'')+v.toFixed(1)+'%';
+};
+const pctClass = (v, invertBad=false) => {
+  if (invertBad) { if (v>10) return 'pct-red'; if (v>0) return 'pct-orange'; return 'pct-green'; }
+  if (v>=5) return 'pct-green'; if (v>=-5) return 'pct-orange'; return 'pct-red';
+};
+const statusBadge = pct => {
+  if (pct>=5)   return `<span class="badge badge-exceeded"><span class="dot"></span> EXCEEDED</span>`;
+  if (pct>=-5)  return `<span class="badge badge-on-track"><span class="dot"></span> ON TRACK</span>`;
+  if (pct>=-15) return `<span class="badge badge-at-risk"><span class="dot"></span> AT RISK</span>`;
+  return `<span class="badge badge-behind"><span class="dot"></span> BEHIND</span>`;
+};
+const getVal = id => parseFloat(document.getElementById(id)?.value||0)||0;
+
+// ─── MONTH NAV ──────────────────────────────────────────────────────────
+function changeMonth(dir) {
+  // AUTO-SAVE current month's form data before switching
+  autoSaveCurrentMonth();
+
+  currentMonth += dir;
+  if (currentMonth>11) { currentMonth=0; currentYear++; }
+  if (currentMonth<0)  { currentMonth=11; currentYear--; }
+  updateHeader();
+  loadCurrentMonth();
+}
+
+function autoSaveCurrentMonth() {
+  // Only save if at least one field has a value
+  const hasData = FIELD_IDS.some(id => {
+    const el = document.getElementById(id);
+    return el && el.value !== '' && parseFloat(el.value) !== 0;
+  });
+  if (!hasData) return;
+  const data = { _month: currentMonth, _year: currentYear };
+  FIELD_IDS.forEach(id => { const el=document.getElementById(id); if(el) data[id]=parseFloat(el.value)||0; });
+  dbSaveMonth(currentKey(), data);
+}
+
+function updateHeader() {
+  document.getElementById('monthDisplay').textContent = `${MONTHS[currentMonth].slice(0,3).toUpperCase()} ${currentYear}`;
+}
+
+// ─── DAYS BAR ───────────────────────────────────────────────────────────
+function updateDaysBar() {
+  const days=getVal('workDays')||25, elapsed=getVal('daysElapsed')||0;
+  const pct = days>0 ? Math.min(100,(elapsed/days)*100) : 0;
+  document.getElementById('daysBarFill').style.width = pct+'%';
+  document.getElementById('daysStatText').textContent = `${elapsed}/${days} days (${pct.toFixed(0)}%)`;
+  const rem = days-elapsed;
+  document.getElementById('daysHint').textContent = rem>0 ? `${rem} left` : 'Complete';
+}
+
+// ─── FIELD IDS ──────────────────────────────────────────────────────────
+const FIELD_IDS = ['revBudget','revActual','workDays','daysElapsed','carBudget','carActual','aroBudget','aroActual','budgetHours','actualHours','invoicedHours','labourCost','productCost','reviewMinRating','googleReviewsStart','googleReviewsEnd','googleReviewTarget','googleReviewBonus'];
+
+// ─── SAVE CURRENT MONTH ─────────────────────────────────────────────────
+function saveData() {
+  const data = { _month: currentMonth, _year: currentYear };
+  FIELD_IDS.forEach(id => { const el=document.getElementById(id); if(el) data[id]=parseFloat(el.value)||0; });
+  const ok = dbSaveMonth(currentKey(), data);
+  if (ok) {
+    showStatus(`✓ ${MONTHS[currentMonth]} ${currentYear} saved`, 'var(--accent)');
+    const btn=document.getElementById('saveBtn');
+    btn.textContent='✓ SAVED'; btn.style.borderColor='var(--accent)';
+    setTimeout(()=>{ btn.textContent='💾 SAVE'; btn.style.borderColor=''; }, 2000);
+  } else {
+    showStatus('⚠ Save failed', 'var(--danger)');
+  }
+}
+
+// ─── LOAD A MONTH INTO FORM ─────────────────────────────────────────────
+function loadCurrentMonth() {
+  const key = currentKey();
+  const saved = dbGetMonth(key);
+  const presets = monthlyPresetDefaults(key);
+
+  // ALWAYS clear all fields first
+  FIELD_IDS.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+
+  if (saved) {
+    FIELD_IDS.forEach(id => {
+      const el=document.getElementById(id);
+      if(el && saved[id] !== undefined) el.value = saved[id];
+    });
+    showStatus(`📂 ${MONTHS[currentMonth]} ${currentYear} loaded`, 'var(--accent)');
+  } else if (presets) {
+    Object.entries(presets).forEach(([k,v]) => { const el=document.getElementById(k); if(el) el.value=v; });
+    showStatus(`Targets loaded for ${MONTHS[currentMonth]} ${currentYear}`, 'var(--accent)');
+  } else {
+    showStatus(`No preset target found for ${MONTHS[currentMonth]} ${currentYear}`, 'var(--muted)');
+  }
+
+  updateDaysBar();
+  calculate();
+}
+
+function loadMonthFromHistory(key) {
+  const [y, m] = key.split('-').map(Number);
+  currentYear  = y;
+  currentMonth = m - 1;
+  updateHeader();
+  loadCurrentMonth();
+  navTo('overview');
+}
+
+// ─── CLEAR CURRENT MONTH ────────────────────────────────────────────────
+function clearSaved() {
+  const key = currentKey();
+  if (!dbGetMonth(key)) { showStatus('Nothing saved for this month', 'var(--muted)'); return; }
+  if (!confirm(`Clear all data for ${MONTHS[currentMonth]} ${currentYear}?`)) return;
+  dbDeleteMonth(key);
+  FIELD_IDS.forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  updateDaysBar();
+  calculate();
+  showStatus(`✕ ${MONTHS[currentMonth]} ${currentYear} cleared`, 'var(--accent2)');
+}
+
+function showStatus(msg, color) {
+  const el=document.getElementById('saveStatus');
+  if(!el) return;
+  el.innerHTML=msg; el.style.color=color;
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.innerHTML='', 3500);
+}
+
+// ─── HISTORY RENDER ─────────────────────────────────────────────────────
+function renderHistory() {
+  const months = dbAllMonths();
+  const list   = document.getElementById('historyList');
+  const empty  = document.getElementById('historyEmpty');
+  const chart  = document.getElementById('historyChart');
+
+  if (!months.length) {
+    list.innerHTML=''; empty.style.display='block'; chart.style.display='none'; return;
+  }
+  empty.style.display='none'; chart.style.display='block';
+
+  list.innerHTML = months.map(d => {
+    const rb = d.revBudget||0, ra = d.revActual||0;
+    const cb = d.carBudget||0, ca = d.carActual||0;
+    const arob = d.aroBudget||0, aroa = d.aroActual||0;
+    const revPct = rb>0 ? ((ra-rb)/rb)*100 : 0;
+    const carPct = cb>0 ? ((ca-cb)/cb)*100 : 0;
+    const aroPct = arob>0 ? ((aroa-arob)/arob)*100 : 0;
+    const pacePct= rb>0 ? Math.min(100,(ra/rb)*100) : 0;
+    const isCurrent = d._key === currentKey();
+    const [y,m] = d._key.split('-').map(Number);
+    const monthName = `${MONTHS[m-1].toUpperCase()} ${y}`;
+    const overallPct= revPct*0.5 + carPct*0.3 + aroPct*0.2;
+    const accentColor = pacePct>=100 ? 'var(--accent)' : pacePct>=80 ? 'var(--warn)' : 'var(--danger)';
+    const savedDate = d._savedAt ? new Date(d._savedAt).toLocaleDateString() : '—';
+    return `<div class="month-card ${isCurrent?'current-month':''}" style="--mc-color:${accentColor}">
+      <div class="mc-top">
+        <div>
+          <div class="mc-title">${monthName}${isCurrent?' <span style="font-size:10px;font-family:JetBrains Mono,monospace;color:var(--accent);background:rgba(0,229,176,0.1);padding:2px 6px;border-radius:4px;border:1px solid rgba(0,229,176,0.2)">CURRENT</span>':''}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px;">Saved ${savedDate}</div>
+        </div>
+        <div class="mc-badge-row">${statusBadge(overallPct)}</div>
+      </div>
+      <div class="mc-metrics">
+        <div class="mc-metric">
+          <div class="mc-metric-val">${fmt$(ra)}</div>
+          <div class="mc-metric-label">Revenue</div>
+          <div class="mc-metric-pct ${pctClass(revPct)}">${fmtPct(revPct)}</div>
+        </div>
+        <div class="mc-metric">
+          <div class="mc-metric-val">${fmtN(ca)}</div>
+          <div class="mc-metric-label">Car Count</div>
+          <div class="mc-metric-pct ${pctClass(carPct)}">${fmtPct(carPct)}</div>
+        </div>
+        <div class="mc-metric">
+          <div class="mc-metric-val">${fmt$(aroa)}</div>
+          <div class="mc-metric-label">Avg RO</div>
+          <div class="mc-metric-pct ${pctClass(aroPct)}">${fmtPct(aroPct)}</div>
+        </div>
+      </div>
+      <div class="mc-bar"><div class="mc-bar-fill" style="width:${pacePct}%;background:${accentColor}"></div></div>
+      <div class="mc-actions">
+        <button class="mc-load-btn" onclick="loadMonthFromHistory('${d._key}')">▶ LOAD THIS MONTH</button>
+        <button class="mc-del-btn" onclick="deleteMonthFromHistory('${d._key}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Revenue bar chart across months (reverse to show oldest→newest)
+  const chartMonths = [...months].reverse().slice(-12);
+  const maxRev = Math.max(...chartMonths.map(d => Math.max(d.revBudget||0, d.revActual||0)), 1);
+  const toH = v => Math.max(2, Math.min(100, (v/maxRev)*100));
+  document.getElementById('historyBarChart').innerHTML = chartMonths.map(d => {
+    const [y,m] = d._key.split('-').map(Number);
+    const budH = toH(d.revBudget||0), actH = toH(d.revActual||0);
+    const actColor = (d.revActual||0) >= (d.revBudget||0) ? 'var(--accent)' : 'var(--accent2)';
+    return `<div class="bar-col" title="${MONTHS[m-1]} ${y}: ${fmt$(d.revActual||0)}">
+      <div class="bar-budget" style="height:${budH}%"></div>
+      <div class="bar-actual" style="height:${actH}%;background:${actColor}"></div>
+      <span class="bar-day-label">${MONTHS[m-1].slice(0,3)}</span>
+    </div>`;
+  }).join('');
+}
+
+function deleteMonthFromHistory(key) {
+  const [y,m] = key.split('-').map(Number);
+  if (!confirm(`Delete all data for ${MONTHS[m-1]} ${y}?`)) return;
+  dbDeleteMonth(key);
+  renderHistory();
+}
+
+// ─── MONTHLY PERFORMANCE RENDER ─────────────────────────────────────────
+function renderPerformance() {
+  const months = dbAllMonths().reverse(); // oldest → newest
+  const empty  = document.getElementById('perfEmpty');
+
+  if (!months.length) {
+    empty.style.display='block';
+    ['perfKpiRow','perfRevChart','perfCarChart','perfAroChart','perfTableBody'].forEach(id => {
+      const el=document.getElementById(id); if(el) el.innerHTML='';
+    });
+    document.querySelectorAll('#screen-performance .section-title, #screen-performance .chart-wrap, #screen-performance .card').forEach(el=>el.style.display='none');
+    return;
+  }
+  empty.style.display='none';
+  document.querySelectorAll('#screen-performance .section-title, #screen-performance .chart-wrap, #screen-performance .card').forEach(el=>el.style.display='');
+
+  // ── KPI Summary cards (totals/averages across all months) ────
+  const totalRev    = months.reduce((s,d)=>s+(d.revActual||0),0);
+  const totalBudget = months.reduce((s,d)=>s+(d.revBudget||0),0);
+  const totalCars   = months.reduce((s,d)=>s+(d.carActual||0),0);
+  const avgARO      = months.filter(d=>(d.aroActual||0)>0).reduce((s,d,_,a)=>s+(d.aroActual||0)/a.length,0);
+  const totalRevPct = totalBudget>0 ? ((totalRev-totalBudget)/totalBudget)*100 : 0;
+  const bestMonth   = [...months].sort((a,b)=>(b.revActual||0)-(a.revActual||0))[0];
+  const [by,bm]     = bestMonth._key.split('-').map(Number);
+
+  document.getElementById('perfKpiRow').innerHTML = [
+    buildCard('Total Revenue', fmt$(totalRev), {txt:fmtPct(totalRevPct)+' vs budget',cls:pctClass(totalRevPct)}, Math.min(100,totalBudget>0?(totalRev/totalBudget)*100:0), totalRevPct>=0?'var(--accent)':'var(--accent2)', `<span class="forecast-pill">${months.length} months</span>`, totalRevPct>=0?'var(--accent)':'var(--accent2)', totalRevPct>=0?'card-hero':''),
+    buildCard('Total Car Count', fmtN(totalCars), {txt:`Avg ${fmtN(totalCars/months.length,1)}/month`,cls:'pct-blue'}, 0, 'var(--accent3)', '', 'var(--accent3)'),
+    buildCard('Best Month', fmt$(bestMonth.revActual||0), {txt:`${MONTHS[bm-1].slice(0,3)} ${by}`,cls:'pct-green'}, 100, 'var(--accent)', `<span class="forecast-pill">Avg ARO ${fmt$(avgARO)}</span>`, 'var(--accent)'),
+  ].join('');
+
+  // ── Bar chart builder ────────────────────────────────────────
+  function buildPerfChart(elId, vals, labels) {
+    const maxV = Math.max(...vals.map(v=>Math.max(v.bud,v.act)), 1);
+    const toH  = v => Math.max(2,Math.min(100,(v/maxV)*100));
+    document.getElementById(elId).innerHTML = vals.map((v,i) => {
+      const budH=toH(v.bud), actH=toH(v.act);
+      const actColor = v.act>=v.bud ? 'var(--accent)' : 'var(--accent2)';
+      return `<div class="bar-col" title="${labels[i]}: ${fmt$(v.act)}">
+        <div class="bar-budget" style="height:${budH}%"></div>
+        <div class="bar-actual" style="height:${actH}%;background:${actColor}"></div>
+        <span class="bar-day-label">${labels[i]}</span>
+      </div>`;
+    }).join('');
+  }
+
+  const labels = months.map(d => { const [y,m]=d._key.split('-').map(Number); return MONTHS[m-1].slice(0,3); });
+  buildPerfChart('perfRevChart', months.map(d=>({bud:d.revBudget||0,act:d.revActual||0})), labels);
+  buildPerfChart('perfCarChart', months.map(d=>({bud:d.carBudget||0,act:d.carActual||0})), labels);
+  buildPerfChart('perfAroChart', months.map(d=>({bud:d.aroBudget||0,act:d.aroActual||0})), labels);
+
+  // ── Full comparison table ────────────────────────────────────
+  document.getElementById('perfTableBody').innerHTML = [...months].reverse().map(d => {
+    const rb=d.revBudget||0, ra=d.revActual||0;
+    const cb=d.carBudget||0, ca=d.carActual||0;
+    const arob=d.aroBudget||0, aroa=d.aroActual||0;
+    const revPct=rb>0?((ra-rb)/rb)*100:0;
+    const carPct=cb>0?((ca-cb)/cb)*100:0;
+    const aroPct=arob>0?((aroa-arob)/arob)*100:0;
+    const overall=revPct*0.5+carPct*0.3+aroPct*0.2;
+    const [y,m]=d._key.split('-').map(Number);
+    const isCur = d._key===currentKey();
+    return `<tr style="${isCur?'background:rgba(0,229,176,0.04)':''}">
+      <td style="color:${isCur?'var(--accent)':'var(--label)'};">
+        ${MONTHS[m-1].slice(0,3)} ${y}${isCur?' <span style="font-size:8px;color:var(--accent)">●</span>':''}
+      </td>
+      <td style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;">${fmt$(ra)}</td>
+      <td class="${pctClass(revPct)}" style="font-family:'JetBrains Mono',monospace;font-size:10px;">${fmtPct(revPct)}</td>
+      <td style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;">${fmtN(ca)}</td>
+      <td style="color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px;">${fmt$(aroa)}</td>
+      <td>${statusBadge(overall)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── DEFAULTS / RESTORE ─────────────────────────────────────────────────
+function setDefaults() {
+  loadCurrentMonth();
+}
+
+// ─── CARD BUILDER ───────────────────────────────────────────────────────
+function buildCard(label, value, pct, barPct, barColor, extra='', accent='var(--accent)', heroClass='') {
+  const clamp = Math.min(100,Math.max(0,barPct||0));
+  return `<div class="card ${heroClass}" style="--card-accent:${accent}">
+    <div>
+      <div class="card-label">${label}</div>
+      <div class="card-value">${value}</div>
+      <div class="card-sub">
+        <span class="card-pct ${pct.cls}">${pct.txt}</span>
+        ${extra}
+      </div>
+    </div>
+    <div class="mini-bar"><div class="mini-bar-fill" style="width:${clamp}%;background:${barColor}"></div></div>
+  </div>`;
+}
+
+
+// ─── BONUS + ALERT HELPERS ──────────────────────────────────────────────
+function computeBonusData() {
+  const rb=getVal('revBudget'), ra=getVal('revActual');
+  const cb=getVal('carBudget'), ca=getVal('carActual');
+  const arob=getVal('aroBudget'), aroa=getVal('aroActual');
+  const ih=getVal('invoicedHours');
+  const newReviews = Math.max(0, getVal('googleReviewsEnd') - getVal('googleReviewsStart'));
+  const reviewTarget = getVal('googleReviewTarget') || 50;
+  const reviewPayout = getVal('googleReviewBonus') || 50;
+  const minRating = getVal('reviewMinRating') || 4.5;
+  const revenueSurplus = Math.max(0, ra - rb);
+  const revenueBase = (rb > 0 && ra >= rb) ? 500 : 0;
+  const revenueCommission = revenueBase ? revenueSurplus * 0.02 : 0;
+  const revenueBonus = revenueBase + revenueCommission;
+  const aroBonus = (arob > 0 && aroa >= arob) ? 100 : 0;
+  const carBonus = (cb > 0 && ca >= cb) ? 100 : 0;
+  const reviewBonus = newReviews >= reviewTarget ? reviewPayout : 0;
+  const productivityBonus = ih >= 320 ? 100 : 0;
+  const totalBonus = revenueBonus + aroBonus + carBonus + reviewBonus + productivityBonus;
+  const tier = revenueBase ? `Budget beat: $500 + 2% of ${fmt$(revenueSurplus)} surplus` : `Need ${fmt$(Math.max(0, rb-ra))} more to beat revenue target`;
+  return { rb, ra, cb, ca, arob, aroa, ih, newReviews, reviewTarget, reviewPayout, minRating, revenueSurplus, revenueBase, revenueCommission, revenueBonus, aroBonus, carBonus, reviewBonus, productivityBonus, totalBonus, tier };
+}
+
+function renderBonusAndAlerts(revDailyRequired, revDailyBudget, revForecast, daysRem) {
+  const b = computeBonusData();
+  const alerts = [];
+  if (b.rb > 0 && b.ra >= b.rb) alerts.push(`<div class="alert-box alert-good">✓ Revenue target beat. Revenue bonus unlocked: $500 base + 2% surplus (${fmt$(b.revenueCommission)}).</div>`);
+  else alerts.push(`<div class="alert-box alert-danger">Revenue bonus locked. Need ${fmt$(Math.max(0,b.rb-b.ra))} more to hit this month’s ${fmt$(b.rb)} target.</div>`);
+  if (daysRem > 0) alerts.push(`<div class="alert-box ${revDailyRequired>revDailyBudget*1.3?'alert-danger':revDailyRequired>revDailyBudget?'alert-warn':'alert-good'}">Daily revenue required to hit target: ${fmt$(Math.max(0,revDailyRequired))} for ${daysRem} remaining days. Forecast: ${fmt$(revForecast)}.</div>`);
+  if (b.carBonus) alerts.push(`<div class="alert-box alert-good">✓ Car count bonus hit: ${fmtN(b.ca)}/${fmtN(b.cb)} cars.</div>`);
+  else alerts.push(`<div class="alert-box alert-warn">Car count bonus: need ${fmtN(Math.max(0,b.cb-b.ca))} more cars for $100.</div>`);
+  if (b.aroBonus) alerts.push(`<div class="alert-box alert-good">✓ ARO bonus hit: ${fmt$(b.aroa)} vs ${fmt$(b.arob)} target.</div>`);
+  else alerts.push(`<div class="alert-box alert-warn">ARO bonus: need ${fmt$(Math.max(0,b.arob-b.aroa))} more average RO for $100.</div>`);
+  if (b.reviewBonus) alerts.push(`<div class="alert-box alert-good">✓ Google reviews bonus hit: ${b.newReviews}/${b.reviewTarget}. Bonus: ${fmt$(b.reviewBonus)}.</div>`);
+  else alerts.push(`<div class="alert-box alert-warn">Google reviews: ${b.newReviews}/${b.reviewTarget}. Need ${b.reviewTarget-b.newReviews} more reviews for ${fmt$(b.reviewPayout)}.</div>`);
+  if (b.productivityBonus) alerts.push(`<div class="alert-box alert-good">✓ Productivity bonus hit: ${fmtN(b.ih)} invoiced hours.</div>`);
+  else alerts.push(`<div class="alert-box alert-warn">Productivity bonus: need ${fmtN(Math.max(0,320-b.ih))} more invoiced hours for $100.</div>`);
+
+  document.getElementById('revenueAlerts').innerHTML = alerts.join('');
+  document.getElementById('bonusGrid').innerHTML = [
+    buildCard('Revenue Bonus', fmt$(b.revenueBonus), {txt:b.tier, cls:b.revenueBonus>0?'pct-green':'pct-orange'}, b.rb>0?Math.min(100,(b.ra/b.rb)*100):0, b.revenueBonus>0?'var(--accent)':'var(--warn)', `<span class="forecast-pill">Surplus ${fmt$(b.revenueSurplus)}</span>`, b.revenueBonus>0?'var(--accent)':'var(--warn)', b.revenueBonus>0?'card-hero':''),
+    buildCard('KPI Bonuses', fmt$(b.aroBonus + b.carBonus + b.productivityBonus), {txt:`ARO ${fmt$(b.aroBonus)} · Cars ${fmt$(b.carBonus)} · Hrs ${fmt$(b.productivityBonus)}`, cls:(b.aroBonus+b.carBonus+b.productivityBonus)>0?'pct-green':'pct-orange'}, 100, 'var(--accent3)', `<span class="forecast-pill">320 hrs target</span>`, 'var(--accent3)'),
+    buildCard('Total Bonus', fmt$(b.totalBonus), {txt:`Reviews ${fmt$(b.reviewBonus)} · ${b.newReviews}/${b.reviewTarget}`, cls:b.totalBonus>0?'pct-green':'pct-orange'}, Math.min(100,(b.totalBonus/1200)*100), 'var(--accent)', `<span class="forecast-pill">Min rating ${fmtN(b.minRating,1)}★</span>`, 'var(--accent)', b.totalBonus>0?'card-hero':''),
+  ].join('');
+}
+
+function printMonthlyReport() {
+  calculate();
+  const rb=getVal('revBudget'), ra=getVal('revActual'), wd=getVal('workDays'), de=getVal('daysElapsed');
+  const cb=getVal('carBudget'), ca=getVal('carActual'), arob=getVal('aroBudget'), aroa=getVal('aroActual');
+  const bh=getVal('budgetHours'), ah=getVal('actualHours'), ih=getVal('invoicedHours'), lc=getVal('labourCost');
+  const revPct = rb>0 ? ((ra-rb)/rb)*100 : 0;
+  const carPct = cb>0 ? ((ca-cb)/cb)*100 : 0;
+  const aroPct = arob>0 ? ((aroa-arob)/arob)*100 : 0;
+  const b=computeBonusData();
+  document.getElementById('printReport').innerHTML = `
+    <div class="pr-header">
+      <div><div class="pr-logo">MONTHLY PERFORMANCE REPORT</div><div class="pr-sub">76 Hartzel Rd, St. Catharines · 905-682-0005 · www.speedy.com</div></div>
+      <div class="pr-title">${MONTHS[currentMonth]} ${currentYear}<br><span style="font-size:14px;font-weight:600;">Target & Bonus Summary</span></div>
+    </div>
+    <div class="pr-grid">
+      <div class="pr-card"><div class="pr-label">Revenue</div><div class="pr-value">${fmt$(ra)}</div><div>${fmtPct(revPct)} vs target</div></div>
+      <div class="pr-card"><div class="pr-label">Car Count</div><div class="pr-value">${fmtN(ca)}</div><div>${fmtPct(carPct)} vs target</div></div>
+      <div class="pr-card"><div class="pr-label">Avg Repair Order</div><div class="pr-value">${fmt$(aroa)}</div><div>${fmtPct(aroPct)} vs target</div></div>
+      <div class="pr-card"><div class="pr-label">Total Bonus</div><div class="pr-value">${fmt$(b.totalBonus)}</div><div>${b.revenueBase?'Revenue target hit':'Revenue target pending'}</div></div>
+    </div>
+    <div class="pr-section">Monthly KPI Summary</div>
+    <table class="pr-table"><tr><th>Metric</th><th>Target</th><th>Actual</th><th>Variance</th></tr>
+      <tr><td>Revenue</td><td>${fmt$(rb)}</td><td>${fmt$(ra)}</td><td>${fmtPct(revPct)}</td></tr>
+      <tr><td>Car Count</td><td>${fmtN(cb)}</td><td>${fmtN(ca)}</td><td>${fmtPct(carPct)}</td></tr>
+      <tr><td>Avg Repair Order</td><td>${fmt$(arob)}</td><td>${fmt$(aroa)}</td><td>${fmtPct(aroPct)}</td></tr>
+      <tr><td>Productivity</td><td>320 invoiced hrs</td><td>${fmtN(ih)} invoiced hrs</td><td>${fmtN(Math.max(0,ih-320))} over target</td></tr>
+      <tr><td>Google Reviews</td><td>${b.reviewTarget}</td><td>${b.newReviews}</td><td>${b.newReviews-b.reviewTarget}</td></tr>
+    </table>
+    <div class="pr-section">Bonus Calculation</div>
+    <table class="pr-table"><tr><th>Bonus Item</th><th>Calculation</th><th>Amount</th></tr>
+      <tr><td>Revenue Bonus</td><td>$500 base after beating target + 2% of ${fmt$(b.revenueSurplus)} surplus</td><td>${fmt$(b.revenueBonus)}</td></tr>
+      <tr><td>Avg Repair Order</td><td>${fmt$(aroa)} vs ${fmt$(arob)} target</td><td>${fmt$(b.aroBonus)}</td></tr>
+      <tr><td>Car Count</td><td>${fmtN(ca)} vs ${fmtN(cb)} target</td><td>${fmt$(b.carBonus)}</td></tr>
+      <tr><td>Google Reviews</td><td>${b.newReviews}/${b.reviewTarget} reviews</td><td>${fmt$(b.reviewBonus)}</td></tr>
+      <tr><td>Productivity</td><td>${fmtN(ih)} invoiced hours vs 320 target</td><td>${fmt$(b.productivityBonus)}</td></tr>
+      <tr><td><strong>Total Bonus</strong></td><td></td><td><strong>${fmt$(b.totalBonus)}</strong></td></tr>
+    </table>
+    <div class="pr-section">Manager Notes</div>
+    <div class="pr-note">Bonus structure used in dashboard: beat monthly revenue target to earn $500 base plus 2% revenue surplus; beat ARO target for $100; beat car-count target for $100; collect 50 Google reviews for $50; reach 320+ invoiced hours for $100.</div>`;
+  window.print();
+}
+
+// ─── CALCULATE ──────────────────────────────────────────────────────────
+function calculate() {
+  const rb=getVal('revBudget'), ra=getVal('revActual'), wd=getVal('workDays'), de=getVal('daysElapsed');
+  const cb=getVal('carBudget'), ca=getVal('carActual');
+  const arob=getVal('aroBudget'), aroa=getVal('aroActual');
+  const bh=getVal('budgetHours'), ah=getVal('actualHours'), ih=getVal('invoicedHours'), lc=getVal('labourCost');
+  const daysRem=wd-de;
+  updateDaysBar();
+
+  // Revenue
+  const revDailyBudget = wd>0 ? rb/wd : 0;
+  const revDailyActual = de>0 ? ra/de : 0;
+  const revForecast    = de>0 ? revDailyActual*wd : 0;
+  const revVsBudget$   = ra-rb;
+  const revVsBudgetPct = rb>0 ? ((ra-rb)/rb)*100 : 0;
+  const revFcstVsBudPct= rb>0 ? ((revForecast-rb)/rb)*100 : 0;
+  const revDailyRequired=daysRem>0 ? (rb-ra)/daysRem : 0;
+  const revPacePct     = rb>0 ? (ra/rb)*100 : 0;
+  const dailyVsBudPct  = revDailyBudget>0 ? ((revDailyActual-revDailyBudget)/revDailyBudget)*100 : 0;
+
+  // Car count
+  const carForecast    = de>0 ? (ca/de)*wd : 0;
+  const carVsBudget$   = ca-cb;
+  const carVsBudgetPct = cb>0 ? ((ca-cb)/cb)*100 : 0;
+  const carFcstVsBudPct= cb>0 ? ((carForecast-cb)/cb)*100 : 0;
+  const carPacePct     = cb>0 ? (ca/cb)*100 : 0;
+
+  // ARO
+  const aroVsBudget$   = aroa-arob;
+  const aroVsBudgetPct = arob>0 ? ((aroa-arob)/arob)*100 : 0;
+  const aroPct         = arob>0 ? (aroa/arob)*100 : 0;
+
+  // Hours
+  const hoursVsBudget$ = ah-bh;
+  const hoursVsBudgetPct=bh>0 ? ((ah-bh)/bh)*100 : 0;
+  const hoursInvPct    = ah>0 ? (ih/ah)*100 : 0;
+  const efficiencyPct  = bh>0 ? (ah/bh)*100 : 0;
+  const avgHourlyRate  = ih>0 ? ra/ih : 0;
+  const budgetedRate   = bh>0 ? rb/bh : 0;
+  const rateVsBudget$  = avgHourlyRate-budgetedRate;
+  const rateVsBudgetPct= budgetedRate>0 ? ((avgHourlyRate-budgetedRate)/budgetedRate)*100 : 0;
+
+  // ── REVENUE CARDS (2-col × 3-row) ────────────────────────────
+  const revLeft = [
+    buildCard('Revenue Budget', fmt$(rb), {txt:'100% Target',cls:'pct-blue'}, 100, 'var(--accent3)', '', 'var(--accent3)'),
+    buildCard('Revenue Forecast (EOM)', fmt$(revForecast), {txt:fmtPct(revFcstVsBudPct)+' vs Budget',cls:pctClass(revFcstVsBudPct)}, Math.min(100,(revForecast/rb)*100), '#4fc3f7', `<span class="forecast-pill">${fmt$(revForecast-rb)}</span>`, '#4fc3f7'),
+    buildCard('Avg Daily Revenue Budget', fmt$(revDailyBudget), {txt:'Per Working Day',cls:'pct-blue'}, 100, 'var(--accent3)', '', 'var(--accent3)'),
+  ].join('');
+  const revRight = [
+    buildCard('Revenue Generated', fmt$(ra), {txt:fmtPct(revVsBudgetPct)+' vs Budget',cls:pctClass(revVsBudgetPct)}, revPacePct, 'var(--accent)', `<span class="forecast-pill">${fmtPct(revVsBudgetPct)} (${fmt$(revVsBudget$)})</span>`, 'var(--accent)', revPacePct>=95?'card-hero':''),
+    buildCard('Avg Daily Revenue Required', fmt$(revDailyRequired>0?revDailyRequired:0), {txt:`Over ${daysRem} remaining days`,cls:revDailyRequired>revDailyBudget*1.5?'pct-red':'pct-orange'}, revDailyRequired>0?Math.min(100,(revDailyBudget/revDailyRequired)*100):0, revDailyRequired>revDailyBudget*1.3?'var(--danger)':'var(--warn)', '', revDailyRequired>revDailyBudget*1.3?'var(--danger)':'var(--warn)'),
+    buildCard('Avg Daily Revenue Generated', fmt$(revDailyActual), {txt:fmtPct(dailyVsBudPct)+' vs Daily Budget',cls:pctClass(dailyVsBudPct)}, Math.min(130,revDailyBudget>0?(revDailyActual/revDailyBudget)*100:0), revDailyActual>=revDailyBudget?'var(--accent)':'var(--accent2)', `<span class="forecast-pill">${revDailyActual>=revDailyBudget?'+':''}${fmt$(revDailyActual-revDailyBudget)}/day</span>`, revDailyActual>=revDailyBudget?'var(--accent)':'var(--accent2)', revDailyActual>=revDailyBudget?'card-hero':''),
+  ].join('');
+  document.getElementById('revenueGrid').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:12px;flex:1">${revLeft}</div>
+    <div style="display:flex;flex-direction:column;gap:12px;flex:1">${revRight}</div>`;
+  renderBonusAndAlerts(revDailyRequired, revDailyBudget, revForecast, daysRem);
+
+  // ── CAR COUNT ─────────────────────────────────────────────────
+  document.getElementById('carCountGrid').innerHTML = [
+    buildCard('Car Count Budget', fmtN(cb), {txt:'100% Target',cls:'pct-blue'}, 100, 'var(--accent3)', '', 'var(--accent3)'),
+    buildCard('Actual Car Count', fmtN(ca), {txt:fmtPct(carVsBudgetPct)+' vs Budget',cls:pctClass(carVsBudgetPct)}, carPacePct, 'var(--accent)', `<span class="forecast-pill">${carVsBudget$>=0?'+':''}${fmtN(carVsBudget$)} units</span>`, 'var(--accent)'),
+    buildCard('Forecast (EOM)', fmtN(carForecast,0), {txt:fmtPct(carFcstVsBudPct)+' vs Budget',cls:pctClass(carFcstVsBudPct)}, Math.min(100,(carForecast/cb)*100), '#4fc3f7', `<span class="forecast-pill">${carForecast-cb>=0?'+':''}${fmtN(carForecast-cb,0)}</span>`, '#4fc3f7'),
+  ].join('');
+
+  // ── ARO ───────────────────────────────────────────────────────
+  document.getElementById('aroGrid').innerHTML = [
+    buildCard('ARO Budget', fmt$(arob), {txt:'100% Target',cls:'pct-blue'}, 100, 'var(--accent3)', '', 'var(--accent3)'),
+    buildCard('Actual ARO', fmt$(aroa), {txt:fmtPct(aroVsBudgetPct)+' vs Budget',cls:pctClass(aroVsBudgetPct)}, aroPct, 'var(--accent)', `<span class="forecast-pill">${aroVsBudget$>=0?'+':''}${fmt$(aroVsBudget$)}/RO</span>`, 'var(--accent)', aroPct>=100?'card-hero':''),
+  ].join('');
+
+  // ── HOURS ─────────────────────────────────────────────────────
+  const hoursGrid = document.getElementById('hoursGrid');
+  hoursGrid.innerHTML = [
+    buildCard('Budget Hours', fmtN(bh), {txt:'100% Target',cls:'pct-blue'}, 100, 'var(--accent3)', '', 'var(--accent3)'),
+    buildCard('Hours Worked', fmtN(ah), {txt:fmtPct(efficiencyPct-100)+' vs Budget',cls:pctClass(hoursVsBudgetPct)}, efficiencyPct, 'var(--accent)', `<span class="forecast-pill">${hoursVsBudget$>=0?'+':''}${fmtN(hoursVsBudget$)} hrs</span>`, 'var(--accent)'),
+    buildCard('Hours Invoiced', fmtN(ih), {txt:fmtN(hoursInvPct,1)+'% of Worked',cls:hoursInvPct>=90?'pct-green':hoursInvPct>=75?'pct-orange':'pct-red'}, hoursInvPct, hoursInvPct>=90?'var(--accent)':'var(--warn)', `<span class="forecast-pill">${fmtN(ih-ah)} vs worked</span>`, hoursInvPct>=90?'var(--accent)':'var(--warn)'),
+    buildCard('Avg Hourly Rate', fmt$(avgHourlyRate), {txt:fmtPct(rateVsBudgetPct)+' vs Budget',cls:pctClass(rateVsBudgetPct)}, Math.min(100,(avgHourlyRate/(budgetedRate||1))*100), 'var(--accent)', `<span class="forecast-pill">Bud: ${fmt$(budgetedRate)}/hr</span>`, 'var(--accent)'),
+  ].join('');
+
+  // Labour cost row appended below hours
+  let lcRow = document.getElementById('lcRow');
+  if (!lcRow) {
+    lcRow = document.createElement('div');
+    lcRow.id = 'lcRow';
+    lcRow.className = 'grid-2';
+    lcRow.style.marginTop = '10px';
+    hoursGrid.after(lcRow);
+  }
+  lcRow.innerHTML = [
+    buildCard('Total Labour Cost', fmt$(lc), {txt:`${fmt$(lc/(ih||1))} effective/hr`,cls:'pct-orange'}, Math.min(100,(lc/rb)*100), 'var(--accent2)', `<span class="forecast-pill">${fmtN((lc/ra)*100,1)}% of Rev</span>`, 'var(--accent2)'),
+    buildCard('Invoiced Efficiency', fmtN(hoursInvPct,1)+'%', {txt:fmtN(ih)+' inv / '+fmtN(ah)+' worked',cls:hoursInvPct>=90?'pct-green':'pct-orange'}, hoursInvPct, hoursInvPct>=90?'var(--accent)':'var(--warn)', `<span class="forecast-pill">Eff Rate: ${fmt$(lc/(ih||1))}/hr</span>`, hoursInvPct>=90?'var(--accent)':'var(--warn)'),
+  ].join('');
+
+  // ── SUMMARY TABLE ─────────────────────────────────────────────
+  const rows = [
+    { label:'Revenue',        budget:fmt$(rb),            actual:fmt$(ra),          forecast:fmt$(revForecast),    vs$:fmt$(revVsBudget$),         vsPct:revVsBudgetPct },
+    { label:'Daily Rev (Avg)',budget:fmt$(revDailyBudget), actual:fmt$(revDailyActual),forecast:'—',               vs$:fmt$(revDailyActual-revDailyBudget), vsPct:revDailyBudget>0?((revDailyActual-revDailyBudget)/revDailyBudget)*100:0 },
+    { label:'Car Count',      budget:fmtN(cb),             actual:fmtN(ca),          forecast:fmtN(carForecast,0),  vs$:(carVsBudget$>=0?'+':'')+fmtN(carVsBudget$), vsPct:carVsBudgetPct },
+    { label:'ARO',            budget:fmt$(arob),           actual:fmt$(aroa),        forecast:'—',                  vs$:(aroVsBudget$>=0?'+':'')+fmt$(aroVsBudget$), vsPct:aroVsBudgetPct },
+    { label:'Sched Hours',    budget:fmtN(bh),             actual:fmtN(ah),          forecast:'—',                  vs$:(hoursVsBudget$>=0?'+':'')+fmtN(hoursVsBudget$), vsPct:hoursVsBudgetPct },
+    { label:'Inv Hours',      budget:fmtN(bh),             actual:fmtN(ih),          forecast:'—',                  vs$:fmtN(ih-bh), vsPct:bh>0?((ih-bh)/bh)*100:0 },
+    { label:'Hourly Rate',    budget:fmt$(budgetedRate),   actual:fmt$(avgHourlyRate),forecast:'—',                 vs$:(rateVsBudget$>=0?'+':'')+fmt$(rateVsBudget$), vsPct:rateVsBudgetPct },
+    { label:'Labour Cost',    budget:'—',                  actual:fmt$(lc),          forecast:'—',                  vs$:fmt$(lc), vsPct:ra>0?(lc/ra)*100:0, costRow:true },
+  ];
+  document.getElementById('summaryBody').innerHTML = rows.map(r => {
+    const c   = r.costRow ? pctClass(r.vsPct,true) : pctClass(r.vsPct);
+    const pctT= r.costRow ? fmtN(r.vsPct,1)+'% Rev' : fmtPct(r.vsPct);
+    return `<tr>
+      <td class="td-label">${r.label}</td>
+      <td class="td-val" style="color:var(--accent3)">${r.budget}</td>
+      <td class="td-val">${r.actual}</td>
+      <td class="td-val" style="color:var(--accent3);opacity:0.7">${r.forecast}</td>
+      <td class="td-pct ${c}">${pctT}</td>
+      <td>${r.costRow?'—':statusBadge(r.vsPct)}</td>
+    </tr>`;
+  }).join('');
+
+  // ── OVERALL BADGE ─────────────────────────────────────────────
+  const overallPct = revVsBudgetPct*0.5 + carVsBudgetPct*0.3 + aroVsBudgetPct*0.2;
+  const badge = document.getElementById('overallBadge');
+  if (overallPct>=5)        { badge.className='badge badge-exceeded'; badge.innerHTML='<span class="dot"></span> EXCEEDED'; }
+  else if (overallPct>=-5)  { badge.className='badge badge-on-track'; badge.innerHTML='<span class="dot"></span> ON TRACK'; }
+  else if (overallPct>=-15) { badge.className='badge badge-at-risk';  badge.innerHTML='<span class="dot"></span> AT RISK'; }
+  else                      { badge.className='badge badge-behind';   badge.innerHTML='<span class="dot"></span> BEHIND'; }
+
+  document.getElementById('lastCalc').textContent = new Date().toLocaleTimeString();
+
+  renderDailyTab(rb, ra, wd, de);
+}
+
+// ─── DAILY TAB ──────────────────────────────────────────────────────────
+function renderDailyTab(rb, ra, wd, de) {
+  const revDailyBudget = wd>0 ? rb/wd : 0;
+  const revDailyActual = de>0 ? ra/de : 0;
+  const daysRem        = wd-de;
+  const revRequired    = daysRem>0 ? (rb-ra)/daysRem : 0;
+  const revForecast    = de>0 ? revDailyActual*wd : 0;
+  const dailyVsBudPct  = revDailyBudget>0 ? ((revDailyActual-revDailyBudget)/revDailyBudget)*100 : 0;
+
+  const heroData = [
+    { label:'Avg Daily Generated', value:fmt$(revDailyActual), sub:`${fmtPct(dailyVsBudPct)} vs daily budget`, subColor:dailyVsBudPct>=0?'var(--accent)':'var(--danger)', top:'var(--accent)', highlight:true },
+    { label:'Daily Budget', value:fmt$(revDailyBudget), sub:`${fmt$(rb)} ÷ ${wd} days`, subColor:'var(--accent3)', top:'var(--accent3)' },
+    { label:'Daily Required (EOM)', value:fmt$(daysRem>0?revRequired:0), sub:`Over ${daysRem} remaining`, subColor:revRequired>revDailyBudget*1.3?'var(--danger)':revRequired>revDailyBudget?'var(--warn)':'var(--accent)', top:revRequired>revDailyBudget*1.3?'var(--danger)':'var(--warn)' },
+    { label:'EOM Forecast', value:fmt$(revForecast), sub:`${fmtPct(rb>0?((revForecast-rb)/rb)*100:0)} vs budget`, subColor:revForecast>=rb?'var(--accent)':'var(--accent2)', top:'#4fc3f7' },
+  ];
+  document.getElementById('dailyHero').innerHTML = heroData.map(h => `
+    <div class="daily-big-card ${h.highlight?'highlight':''}" style="--card-top:${h.top}">
+      <div class="dbc-label">${h.label}</div>
+      <div class="dbc-value" style="${h.highlight?'color:var(--accent)':''}">${h.value}</div>
+      <div class="dbc-sub" style="color:${h.subColor}">${h.sub}</div>
+    </div>`).join('');
+
+  const chartEl = document.getElementById('dailyBarChart');
+  const maxVal = Math.max(revDailyBudget,revDailyActual,revRequired,1);
+  const toH = v => Math.max(2,Math.min(100,(v/maxVal)*100));
+  let bars='';
+  for (let d=1; d<=wd; d++) {
+    const isPast=d<=de, isToday=d===de, isFuture=d>de;
+    const budH=toH(revDailyBudget), actH=isPast?toH(revDailyActual):0, reqH=isFuture?toH(revRequired):0;
+    const actColor=revDailyActual>=revDailyBudget?'var(--accent)':'var(--accent2)';
+    bars+=`<div class="bar-col" title="Day ${d}">
+      <div class="bar-budget" style="height:${budH}%"></div>
+      ${isPast?`<div class="bar-actual" style="height:${actH}%;background:${actColor};${isToday?'box-shadow:0 0 6px rgba(0,229,176,0.5)':''}"></div>`:''}
+      ${isFuture?`<div class="bar-actual" style="height:${reqH}%;background:rgba(0,229,176,0.12);border:1px dashed rgba(0,229,176,0.35);width:100%;left:0;"></div>`:''}
+      <span class="bar-day-label">${d}</span>
+    </div>`;
+  }
+  chartEl.innerHTML=bars;
+
+  let rows='';
+  for (let d=1; d<=wd; d++) {
+    const isPast=d<=de, isToday=d===de, isFuture=d>de;
+    const cumBudget=revDailyBudget*d;
+    const dayAvgAct=isPast?fmt$(revDailyActual):isFuture?`<span style="color:var(--muted)">${fmt$(revRequired)}</span>`:'—';
+    const diff=isPast?revDailyActual-revDailyBudget:null;
+    const diffTxt=diff!==null?`<span style="color:${diff>=0?'var(--accent)':'var(--danger)'}">${diff>=0?'+':''}${fmt$(diff)}</span>`:'<span style="color:var(--muted)">—</span>';
+    const pacePct=isPast&&revDailyBudget>0?Math.min(130,(revDailyActual/revDailyBudget)*100):0;
+    const paceColor=revDailyActual>=revDailyBudget?'var(--accent)':'var(--accent2)';
+    const paceBar=isPast?`<div class="pace-bar-wrap"><div class="pace-bar-track"><div class="pace-bar-fill" style="width:${pacePct}%;background:${paceColor}"></div></div></div>`:'—';
+    rows+=`<tr class="${isToday?'today-row':''}">
+      <td style="color:${isToday?'var(--accent)':'var(--label)'}">
+        ${d}${isToday?' <span style="font-size:8px;background:rgba(0,229,176,0.1);border:1px solid rgba(0,229,176,0.2);border-radius:3px;padding:1px 4px;color:var(--accent)">NOW</span>':''}
+      </td>
+      <td style="color:var(--accent3)">${fmt$(cumBudget)}</td>
+      <td style="color:var(--text)">${isPast?fmt$(revDailyActual*d):'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${dayAvgAct}</td>
+      <td>${diffTxt}</td>
+      <td>${paceBar}</td>
+    </tr>`;
+  }
+  document.getElementById('dailyTableBody').innerHTML=rows;
+}
+
+// ─── SETTINGS SCREEN ────────────────────────────────────────────────────
+function updateSettingsScreen() {
+  const wd=getVal('workDays')||25, de=getVal('daysElapsed')||0;
+  document.getElementById('settingsMonth').textContent = `${MONTHS[currentMonth]} ${currentYear}`;
+  document.getElementById('settingsWorkDays').textContent = wd + ' days';
+  document.getElementById('settingsElapsed').textContent = de + ' days';
+  document.getElementById('settingsRemaining').textContent = Math.max(0,wd-de) + ' days';
+  const saved = dbGetMonth(currentKey());
+  document.getElementById('settingsLastSaved').textContent = saved?._savedAt
+    ? new Date(saved._savedAt).toLocaleString()
+    : 'Not saved yet';
+  const allMonths = dbAllMonths();
+  const totalEl = document.getElementById('settingsTotalMonths');
+  if (totalEl) totalEl.textContent = allMonths.length + ' months tracked';
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────
+updateHeader();
+setDefaults();
+calculate();
+
+// ─── PWA SETUP ───────────────────────────────────────────────────────────
+(function initPWA() {
+
+  // 1. Generate app icon (SVG → canvas → dataURL)
+  function makeIconDataURL(size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    // Background
+    const bg = ctx.createLinearGradient(0, 0, size, size);
+    bg.addColorStop(0, '#0f1f18');
+    bg.addColorStop(1, '#0a0c0f');
+    ctx.fillStyle = bg;
+    const r = size * 0.18;
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(size-r, 0);
+    ctx.arcTo(size, 0, size, r, r);
+    ctx.lineTo(size, size-r);
+    ctx.arcTo(size, size, size-r, size, r);
+    ctx.lineTo(r, size);
+    ctx.arcTo(0, size, 0, size-r, r);
+    ctx.lineTo(0, r);
+    ctx.arcTo(0, 0, r, 0, r);
+    ctx.closePath();
+    ctx.fill();
+
+    // Green accent bar top
+    const bar = ctx.createLinearGradient(0, 0, size, 0);
+    bar.addColorStop(0, '#00e5b0');
+    bar.addColorStop(1, '#4fc3f7');
+    ctx.fillStyle = bar;
+    ctx.fillRect(size*0.08, 0, size*0.84, size*0.035);
+
+    // "MOT" text
+    ctx.fillStyle = '#e8edf5';
+    ctx.font = `bold ${size*0.28}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('MOT', size/2, size*0.38);
+
+    // "DASH" in accent
+    ctx.fillStyle = '#00e5b0';
+    ctx.font = `bold ${size*0.18}px sans-serif`;
+    ctx.fillText('DASH', size/2, size*0.65);
+
+    // Small bar chart decoration
+    const bars = [0.55, 0.75, 0.45, 0.9, 0.6, 0.8];
+    const bw = size * 0.06, gap = size * 0.025;
+    const totalW = bars.length * bw + (bars.length-1) * gap;
+    let bx = (size - totalW) / 2;
+    const by = size * 0.8;
+    bars.forEach((h, i) => {
+      const bh = size * 0.1 * h;
+      ctx.fillStyle = i === 3 ? '#00e5b0' : 'rgba(0,229,176,0.3)';
+      ctx.fillRect(bx, by - bh, bw, bh);
+      bx += bw + gap;
+    });
+
+    return canvas.toDataURL('image/png');
+  }
+
+  const icon192 = makeIconDataURL(192);
+  const icon512 = makeIconDataURL(512);
+  const icon180 = makeIconDataURL(180);
+
+  // 2. Set apple touch icon
+  document.getElementById('apple-touch-icon').href = icon180;
+
+  // 3. Create and inject manifest as blob URL
+  const manifest = {
+    name: 'Speedy Dashboard',
+    short_name: 'Speedy Dash',
+    description: 'Service Department Performance Dashboard',
+    start_url: './',
+    display: 'standalone',
+    background_color: '#0a0c0f',
+    theme_color: '#0a0c0f',
+    orientation: 'portrait',
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  const manifestURL  = URL.createObjectURL(manifestBlob);
+  document.getElementById('pwa-manifest').href = manifestURL;
+
+  // 4. Register service worker (inline via blob)
+  const swCode = `
+const CACHE = 'mot-dash-v1';
+const ASSETS = [self.location.href];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys =>
+    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+  ));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request)))
+  );
+});
+  `;
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL  = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, { scope: './' })
+      .then(() => console.log('Speedy Dash: SW registered'))
+      .catch(e => console.log('SW reg failed:', e));
+  }
+
+  // 5. Install banner logic
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const bannerDismissed = localStorage.getItem('mot_install_dismissed');
+
+  if (isStandalone || bannerDismissed) return; // already installed or dismissed
+
+  let deferredPrompt = null;
+
+  // Android: capture beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner('android');
+  });
+
+  // iOS: show after 2s
+  if (isIOS) {
+    setTimeout(() => showInstallBanner('ios'), 2000);
+  }
+
+  function buildBanner(onInstall, onDismiss) {
+    const banner = document.createElement('div');
+    banner.className = 'install-banner';
+    banner.id = 'install-banner';
+    const img = document.createElement('img');
+    img.src = icon180; img.className = 'install-icon'; img.alt = 'Speedy Dash';
+    const text = document.createElement('div');
+    text.className = 'install-text';
+    text.innerHTML = '<div class="install-title">SPEEDY DASH</div><div class="install-sub">Add to Home Screen · Works offline</div>';
+    const btn = document.createElement('button');
+    btn.className = 'install-btn'; btn.textContent = 'INSTALL';
+    btn.addEventListener('click', onInstall);
+    const dismiss = document.createElement('button');
+    dismiss.className = 'install-dismiss'; dismiss.textContent = '×';
+    dismiss.addEventListener('click', onDismiss);
+    banner.append(img, text, btn, dismiss);
+    return banner;
+  }
+
+  function hideBanner() {
+    const b = document.getElementById('install-banner');
+    if (!b) return;
+    b.classList.add('hiding');
+    setTimeout(() => b.remove(), 300);
+    localStorage.setItem('mot_install_dismissed', '1');
+  }
+
+  function showInstallBanner(platform) {
+    if (platform === 'android') {
+      const banner = buildBanner(
+        async () => {
+          hideBanner();
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+          }
+        },
+        hideBanner
+      );
+      document.body.appendChild(banner);
+    } else {
+      // iOS
+      const banner = buildBanner(
+        () => { hideBanner(); showIOSSheet(); },
+        hideBanner
+      );
+      document.body.appendChild(banner);
+    }
+  }
+
+  function showIOSSheet() {
+    const sheet = document.createElement('div');
+    sheet.className = 'ios-sheet';
+    sheet.innerHTML = `
+      <div class="ios-sheet-inner">
+        <div class="ios-sheet-handle"></div>
+        <div class="ios-sheet-title">Add to Home Screen</div>
+        <div class="ios-sheet-sub">Follow these steps on your iPhone or iPad</div>
+        <div class="ios-step">
+          <div class="ios-step-num">1</div>
+          <div class="ios-step-text">Tap the <span>Share</span> button at the bottom of your browser (the box with an arrow pointing up)</div>
+        </div>
+        <div class="ios-step">
+          <div class="ios-step-num">2</div>
+          <div class="ios-step-text">Scroll down and tap <span>"Add to Home Screen"</span></div>
+        </div>
+        <div class="ios-step">
+          <div class="ios-step-num">3</div>
+          <div class="ios-step-text">Tap <span>"Add"</span> in the top right — the app icon will appear on your home screen</div>
+        </div>
+        <button class="ios-close-btn" onclick="this.closest('.ios-sheet').remove()">GOT IT</button>
+      </div>`;
+    sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+    document.body.appendChild(sheet);
+  }
+
+})();
+</script>
+
+<div id="installHomeBanner" class="install-home-banner">
+  <div class="install-home-icon">S</div>
+  <div class="install-home-text">
+    <div class="install-home-title">Install Speedy Dash</div>
+    <div class="install-home-sub" id="installHomeText">Add this dashboard to your phone home screen for app-style use.</div>
+  </div>
+  <button id="installHomeBtn" class="install-home-btn">Install</button>
+  <button id="installHomeClose" class="install-home-close">×</button>
+</div>
+
+
+
+<script id="homeAppPwaScript">
+(function () {
+  const banner = document.getElementById("installHomeBanner");
+  const btn = document.getElementById("installHomeBtn");
+  const close = document.getElementById("installHomeClose");
+  const text = document.getElementById("installHomeText");
+
+  function isStandalone() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  const isLocalFile =
+    location.protocol === "file:" ||
+    location.protocol === "content:" ||
+    location.href.includes("content://");
+
+  function showBanner() {
+    if (!banner || isStandalone() || localStorage.getItem("speedyDashInstallDismissed") === "1") return;
+    banner.classList.add("show");
+  }
+
+  if (text) {
+    text.innerHTML = isLocalFile
+      ? "This file is opened from Downloads. For real app install, upload it to a website/hosting link first."
+      : "Install this dashboard as an app on your home screen.";
+  }
+
+  if (btn) {
+    btn.textContent = isLocalFile ? "OK" : "Install";
+    btn.addEventListener("click", async function () {
+      if (isLocalFile) {
+        banner.classList.remove("show");
+        return;
+      }
+
+      // Browser will show native install only when the page is hosted on HTTPS.
+      if (window.deferredSpeedyPrompt) {
+        window.deferredSpeedyPrompt.prompt();
+        await window.deferredSpeedyPrompt.userChoice;
+        window.deferredSpeedyPrompt = null;
+        banner.classList.remove("show");
+      } else {
+        text.innerHTML = "Use browser menu → Add to Home screen. On iPhone, use Safari Share → Add to Home Screen.";
+      }
+    });
+  }
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    window.deferredSpeedyPrompt = e;
+    if (text && !isLocalFile) text.innerHTML = "Install this dashboard as an app on your home screen.";
+    showBanner();
+  });
+
+  if (close) {
+    close.addEventListener("click", function () {
+      localStorage.setItem("speedyDashInstallDismissed", "1");
+      banner.classList.remove("show");
+    });
+  }
+
+  setTimeout(showBanner, 1000);
+})();
+</script>
+
+
+</body>
+</html>
